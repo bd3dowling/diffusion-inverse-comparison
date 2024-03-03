@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "diffusion-inverse-comparison"
+version = "0.1.0"
+description = ""
+authors = ["Ben Dowling <ben.dowling@icloud.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+streamlit = "^1.31.1"
+pyyaml = "^6.0.1"
+watchdog = "^4.0.0"
+matplotlib = "^3.8.3"
+scipy = "^1.12.0"
+tqdm = "^4.66.2"
+fastmri = "^0.3.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.3.0"
+pytest = "^8.0.2"
+
+[tool.poetry.group.local.dependencies]
+torch = "^2.2.1"
+torchvision = "^0.17.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+exclude = ["external"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/utils/image.py" = ["E741"]
