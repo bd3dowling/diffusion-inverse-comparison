@@ -13,6 +13,6 @@ measurement:
     kernel_size: 61
     intensity: 3.0
   
-  noise: 
+  noise:
     name: gaussian
     sigma: 0.05
