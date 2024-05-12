@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--diffusion_config", type=str)
     parser.add_argument("--task_config", type=str)
     parser.add_argument("--save_dir", type=str, default="./results")
+    parser.add_argument("--gpu", type=int, default=0)
     args = parser.parse_args()
 
     # logger
@@ -46,9 +47,6 @@ def main():
     model_config = load_yaml(args.model_config)
     diffusion_config = load_yaml(args.diffusion_config)
     task_config = load_yaml(args.task_config)
-
-    # assert model_config['learn_sigma'] == diffusion_config['learn_sigma'], \
-    # "learn_sigma must be the same for model and diffusion configuartion."
 
     # Load model
     model = create_model(**model_config)
