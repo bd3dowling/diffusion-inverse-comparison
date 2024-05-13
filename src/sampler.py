@@ -1,18 +1,20 @@
 import math
-import os
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from tqdm.auto import tqdm
+from enum import StrEnum
 
-from src.utils.image import clear_color
 from src.posterior_mean_variance import get_mean_processor, get_var_processor
 
 
 __SAMPLER__ = {}
 
+class Sampler(StrEnum):
+    DDPM = "ddpm"
+    DDIM = "ddim"
 
-def register_sampler(name: str):
+
+def register_sampler(name: Sampler):
     def wrapper(cls):
         if __SAMPLER__.get(name, None):
             raise NameError(f"Name {name} is already registered!")
@@ -22,7 +24,7 @@ def register_sampler(name: str):
     return wrapper
 
 
-def get_sampler(name: str):
+def get_sampler(name: Sampler):
     if __SAMPLER__.get(name, None) is None:
         raise NameError(f"Name {name} is not defined!")
     return __SAMPLER__[name]
@@ -37,7 +39,7 @@ def create_sampler(
     dynamic_threshold,
     clip_denoised,
     rescale_timesteps,
-    timestep_respacing="",
+    timestep_respacing=0,
 ):
     sampler = get_sampler(name=sampler)
 
@@ -171,7 +173,7 @@ class GaussianDiffusion:
         )
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_sample_loop(self, model, x_start, measurement, measurement_cond_fn, record, save_root):
+    def p_sample_loop(self, model, x_start, measurement, measurement_cond_fn):
         """
         The function used for sampling from noise.
         """
@@ -180,6 +182,7 @@ class GaussianDiffusion:
 
         pbar = tqdm(list(range(self.num_timesteps))[::-1])
         for idx in pbar:
+            percent_complete = (self.num_timesteps - idx) / self.num_timesteps
             time = torch.tensor([idx] * img.shape[0], device=device)
 
             img = img.requires_grad_()
@@ -199,12 +202,8 @@ class GaussianDiffusion:
             img = img.detach_()
 
             pbar.set_postfix({"distance": distance.item()}, refresh=False)
-            if record:
-                if idx % 10 == 0:
-                    file_path = os.path.join(save_root, f"progress/x_{str(idx).zfill(4)}.png")
-                    plt.imsave(file_path, clear_color(img))
 
-        return img
+            yield img, distance.item(), percent_complete
 
     def p_sample(self, model, x, t):
         raise NotImplementedError
@@ -354,7 +353,7 @@ class _WrappedModel:
         return self.model(x, new_ts, **kwargs)
 
 
-@register_sampler(name="ddpm")
+@register_sampler(name=Sampler.DDPM)
 class DDPM(SpacedDiffusion):
     def p_sample(self, model, x, t):
         out = self.p_mean_variance(model, x, t)
@@ -367,7 +366,7 @@ class DDPM(SpacedDiffusion):
         return {"sample": sample, "pred_xstart": out["pred_xstart"]}
 
 
-@register_sampler(name="ddim")
+@register_sampler(name=Sampler.DDIM)
 class DDIM(SpacedDiffusion):
     def p_sample(self, model, x, t, eta=0.0):
         out = self.p_mean_variance(model, x, t)
@@ -450,11 +449,6 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
     return np.array(betas)
 
 
-# ================
-# Helper function
-# ================
-
-
 def extract_and_expand(array, time, target):
     array = torch.from_numpy(array).to(target.device)[time].float()
     while array.ndim < target.ndim:
@@ -472,19 +466,3 @@ def expand_as(array, target):
         array = array.unsqueeze(-1)
 
     return array.expand_as(target).to(target.device)
-
-
-def _extract_into_tensor(arr, timesteps, broadcast_shape):
-    """
-    Extract values from a 1-D numpy array for a batch of indices.
-
-    :param arr: the 1-D numpy array.
-    :param timesteps: a tensor of indices into the array to extract.
-    :param broadcast_shape: a larger shape of K dimensions with the batch
-                            dimension equal to the length of timesteps.
-    :return: a tensor of shape [batch_size, 1, ...] where the shape has K dims.
-    """
-    res = torch.from_numpy(arr).to(device=timesteps.device)[timesteps].float()
-    while len(res.shape) < len(broadcast_shape):
-        res = res[..., None]
-    return res.expand(broadcast_shape)

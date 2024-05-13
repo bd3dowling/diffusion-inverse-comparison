@@ -3,10 +3,6 @@ conditioning:
   params:
     scale: 0.3
 
-data:
-  name: ffhq
-  root: ./data/samples/
-
 measurement:
   operator:
     name: gaussian_blur
