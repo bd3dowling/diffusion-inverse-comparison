@@ -1,9 +1,8 @@
-"""This module handles task-dependent operations (A) and noises (n) to simulate a measurement y=Ax+n."""
-
 from abc import ABC, abstractmethod
 from functools import partial
 from torch.nn import functional as F
 from torchvision import torch
+from enum import StrEnum
 
 from external.resizer import Resizer
 from src.utils.image import Blurkernel
@@ -11,14 +10,18 @@ from src.utils.image import Blurkernel
 from external.motionblur import Kernel
 
 
-# =================
-# Operation classes
-# =================
-
 __OPERATOR__ = {}
 
+class Operator(StrEnum):
+    NOISE = "noise"
+    SUPER_RESOLUTION = "super_resolution"
+    MOTION_BLUR = "motion_blur"
+    GAUSSIAN_BLUR = "gaussian_blur"
+    INPAINTING = "inpainting"
 
-def register_operator(name: str):
+
+
+def register_operator(name: Operator):
     def wrapper(cls):
         if __OPERATOR__.get(name, None):
             raise NameError(f"Name {name} is already registered!")
@@ -28,7 +31,7 @@ def register_operator(name: str):
     return wrapper
 
 
-def get_operator(name: str, **kwargs):
+def get_operator(name: Operator, **kwargs):
     if __OPERATOR__.get(name, None) is None:
         raise NameError(f"Name {name} is not defined.")
     return __OPERATOR__[name](**kwargs)
@@ -54,25 +57,25 @@ class LinearOperator(ABC):
         return self.ortho_project(measurement, **kwargs) - self.forward(data, **kwargs)
 
 
-@register_operator(name="noise")
+@register_operator(name=Operator.NOISE)
 class DenoiseOperator(LinearOperator):
     def __init__(self, device):
         self.device = device
 
-    def forward(self, data):
+    def forward(self, data, **kwargs):
         return data
 
-    def transpose(self, data):
+    def transpose(self, data, **kwargs):
         return data
 
-    def ortho_project(self, data):
+    def ortho_project(self, data, **kwargs):
         return data
 
-    def project(self, data):
+    def project(self, data, measurement, **kwargs):
         return data
 
 
-@register_operator(name="super_resolution")
+@register_operator(name=Operator.SUPER_RESOLUTION)
 class SuperResolutionOperator(LinearOperator):
     def __init__(self, in_shape, scale_factor, device):
         self.device = device
@@ -89,7 +92,7 @@ class SuperResolutionOperator(LinearOperator):
         return data - self.transpose(self.forward(data)) + self.transpose(measurement)
 
 
-@register_operator(name="motion_blur")
+@register_operator(name=Operator.MOTION_BLUR)
 class MotionBlurOperator(LinearOperator):
     def __init__(self, kernel_size, intensity, device):
         self.device = device
@@ -114,8 +117,8 @@ class MotionBlurOperator(LinearOperator):
         return kernel.view(1, 1, self.kernel_size, self.kernel_size)
 
 
-@register_operator(name="gaussian_blur")
-class GaussialBlurOperator(LinearOperator):
+@register_operator(name=Operator.GAUSSIAN_BLUR)
+class GaussianBlurOperator(LinearOperator):
     def __init__(self, kernel_size, intensity, device):
         self.device = device
         self.kernel_size = kernel_size
@@ -135,7 +138,7 @@ class GaussialBlurOperator(LinearOperator):
         return self.kernel.view(1, 1, self.kernel_size, self.kernel_size)
 
 
-@register_operator(name="inpainting")
+@register_operator(name=Operator.INPAINTING)
 class InpaintingOperator(LinearOperator):
     """This operator get pre-defined mask and return masked image."""
 
@@ -153,100 +156,3 @@ class InpaintingOperator(LinearOperator):
 
     def ortho_project(self, data, **kwargs):
         return data - self.forward(data, **kwargs)
-
-
-# =============
-# Noise classes
-# =============
-
-
-__NOISE__ = {}
-
-
-def register_noise(name: str):
-    def wrapper(cls):
-        if __NOISE__.get(name, None):
-            raise NameError(f"Name {name} is already defined!")
-        __NOISE__[name] = cls
-        return cls
-
-    return wrapper
-
-
-def get_noise(name: str, **kwargs):
-    if __NOISE__.get(name, None) is None:
-        raise NameError(f"Name {name} is not defined.")
-    noiser = __NOISE__[name](**kwargs)
-    noiser.__name__ = name
-    return noiser
-
-
-class Noise(ABC):
-    def __call__(self, data):
-        return self.forward(data)
-
-    @abstractmethod
-    def forward(self, data):
-        pass
-
-
-@register_noise(name="clean")
-class Clean(Noise):
-    def forward(self, data):
-        return data
-
-
-@register_noise(name="gaussian")
-class GaussianNoise(Noise):
-    def __init__(self, sigma):
-        self.sigma = sigma
-
-    def forward(self, data):
-        return data + torch.randn_like(data, device=data.device) * self.sigma
-
-
-@register_noise(name="poisson")
-class PoissonNoise(Noise):
-    def __init__(self, rate):
-        self.rate = rate
-
-    def forward(self, data):
-        """
-        Follow skimage.util.random_noise.
-        """
-
-        # TODO: set one version of poisson
-
-        # version 3 (stack-overflow)
-        import numpy as np
-
-        data = (data + 1.0) / 2.0
-        data = data.clamp(0, 1)
-        device = data.device
-        data = data.detach().cpu()
-        data = torch.from_numpy(np.random.poisson(data * 255.0 * self.rate) / 255.0 / self.rate)
-        data = data * 2.0 - 1.0
-        data = data.clamp(-1, 1)
-        return data.to(device)
-
-        # version 2 (skimage)
-        # if data.min() < 0:
-        #     low_clip = -1
-        # else:
-        #     low_clip = 0
-
-        # # Determine unique values in iamge & calculate the next power of two
-        # vals = torch.Tensor([len(torch.unique(data))])
-        # vals = 2 ** torch.ceil(torch.log2(vals))
-        # vals = vals.to(data.device)
-
-        # if low_clip == -1:
-        #     old_max = data.max()
-        #     data = (data + 1.0) / (old_max + 1.0)
-
-        # data = torch.poisson(data * vals) / float(vals)
-
-        # if low_clip == -1:
-        #     data = data * (old_max + 1.0) - 1.0
-
-        # return data.clamp(low_clip, 1.0)

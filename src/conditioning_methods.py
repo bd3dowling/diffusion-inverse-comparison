@@ -1,10 +1,19 @@
 from abc import ABC, abstractmethod
 import torch
+from enum import StrEnum
 
 __CONDITIONING_METHOD__ = {}
 
 
-def register_conditioning_method(name: str):
+class ConditioningMethod(StrEnum):
+    VANILLA = "vanilla"
+    PROJECTION = "projection"
+    MANIFOLD_CONSTRAINT_GRADIENT = "mcg"
+    POSTERIOR_SAMPLING = "ps"
+    POSTERIOR_SAMPLING_PLUS = "ps+"
+
+
+def register_conditioning_method(name: ConditioningMethod):
     def wrapper(cls):
         if __CONDITIONING_METHOD__.get(name, None):
             raise NameError(f"Name {name} is already registered!")
@@ -14,13 +23,13 @@ def register_conditioning_method(name: str):
     return wrapper
 
 
-def get_conditioning_method(name: str, operator, noiser, **kwargs):
+def get_conditioning_method(name: ConditioningMethod, operator, noiser, **kwargs):
     if __CONDITIONING_METHOD__.get(name, None) is None:
         raise NameError(f"Name {name} is not defined!")
     return __CONDITIONING_METHOD__[name](operator=operator, noiser=noiser, **kwargs)
 
 
-class ConditioningMethod(ABC):
+class ConditioningMethod_(ABC):
     def __init__(self, operator, noiser, **kwargs):
         self.operator = operator
         self.noiser = noiser
@@ -51,22 +60,22 @@ class ConditioningMethod(ABC):
         pass
 
 
-@register_conditioning_method(name="vanilla")
-class Identity(ConditioningMethod):
+@register_conditioning_method(name=ConditioningMethod.VANILLA)
+class Identity(ConditioningMethod_):
     # just pass the input without conditioning
-    def conditioning(self, x_t):
-        return x_t
+    def conditioning(self, x_t, **kwargs):
+        return x_t, torch.Tensor([0])
 
 
-@register_conditioning_method(name="projection")
-class Projection(ConditioningMethod):
+@register_conditioning_method(name=ConditioningMethod.PROJECTION)
+class Projection(ConditioningMethod_):
     def conditioning(self, x_t, noisy_measurement, **kwargs):
         x_t = self.project(data=x_t, noisy_measurement=noisy_measurement)
-        return x_t
+        return x_t, torch.Tensor([0])
 
 
-@register_conditioning_method(name="mcg")
-class ManifoldConstraintGradient(ConditioningMethod):
+@register_conditioning_method(name=ConditioningMethod.MANIFOLD_CONSTRAINT_GRADIENT)
+class ManifoldConstraintGradient(ConditioningMethod_):
     def __init__(self, operator, noiser, **kwargs):
         super().__init__(operator, noiser)
         self.scale = kwargs.get("scale", 1.0)
@@ -83,8 +92,8 @@ class ManifoldConstraintGradient(ConditioningMethod):
         return x_t, norm
 
 
-@register_conditioning_method(name="ps")
-class PosteriorSampling(ConditioningMethod):
+@register_conditioning_method(name=ConditioningMethod.POSTERIOR_SAMPLING)
+class PosteriorSampling(ConditioningMethod_):
     def __init__(self, operator, noiser, **kwargs):
         super().__init__(operator, noiser)
         self.scale = kwargs.get("scale", 1.0)
@@ -97,8 +106,8 @@ class PosteriorSampling(ConditioningMethod):
         return x_t, norm
 
 
-@register_conditioning_method(name="ps+")
-class PosteriorSamplingPlus(ConditioningMethod):
+@register_conditioning_method(name=ConditioningMethod.POSTERIOR_SAMPLING_PLUS)
+class PosteriorSamplingPlus(ConditioningMethod_):
     def __init__(self, operator, noiser, **kwargs):
         super().__init__(operator, noiser)
         self.num_sampling = kwargs.get("num_sampling", 5)
