@@ -1,14 +1,17 @@
+"""Posterior mean and variance processor definitions and registries."""
+
 from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
 
 from src.utils.image import dynamic_thresholding
+from src.utils.array import extract_and_expand
 
 
-# ====================
-# Model Mean Processor
-# ====================
+########################
+# Model Mean Processor #
+########################
 
 __MODEL_MEAN_PROCESSOR__ = {}
 
@@ -141,9 +144,9 @@ class EpsilonXMeanProcessor(MeanProcessor):
         return mean, pred_xstart
 
 
-# =========================
-# Model Variance Processor
-# =========================
+############################
+# Model Variance Processor #
+############################
 
 __MODEL_VAR_PROCESSOR__ = {}
 
@@ -255,27 +258,3 @@ class LearnedRangeVarianceProcessor(VarianceProcessor):
         model_log_variance = frac * max_log + (1 - frac) * min_log
         model_variance = torch.exp(model_log_variance)
         return model_variance, model_log_variance
-
-
-# ================
-# Helper function
-# ================
-
-
-def extract_and_expand(array, time, target):
-    array = torch.from_numpy(array).to(target.device)[time].float()
-    while array.ndim < target.ndim:
-        array = array.unsqueeze(-1)
-    return array.expand_as(target)
-
-
-def expand_as(array, target):
-    if isinstance(array, np.ndarray):
-        array = torch.from_numpy(array)
-    elif isinstance(array, np.float):
-        array = torch.tensor([array])
-
-    while array.ndim < target.ndim:
-        array = array.unsqueeze(-1)
-
-    return array.expand_as(target).to(target.device)

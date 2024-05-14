@@ -1,3 +1,5 @@
+"""Sampler definitions and registry."""
+
 import math
 import numpy as np
 import torch
@@ -5,6 +7,7 @@ from tqdm.auto import tqdm
 from enum import StrEnum
 
 from src.posterior_mean_variance import get_mean_processor, get_var_processor
+from src.utils.array import extract_and_expand
 
 
 __SAMPLER__ = {}
@@ -448,22 +451,3 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
         t2 = (i + 1) / num_diffusion_timesteps
         betas.append(min(1 - alpha_bar(t2) / alpha_bar(t1), max_beta))
     return np.array(betas)
-
-
-def extract_and_expand(array, time, target):
-    array = torch.from_numpy(array).to(target.device)[time].float()
-    while array.ndim < target.ndim:
-        array = array.unsqueeze(-1)
-    return array.expand_as(target)
-
-
-def expand_as(array, target):
-    if isinstance(array, np.ndarray):
-        array = torch.from_numpy(array)
-    elif isinstance(array, np.float):
-        array = torch.tensor([array])
-
-    while array.ndim < target.ndim:
-        array = array.unsqueeze(-1)
-
-    return array.expand_as(target).to(target.device)

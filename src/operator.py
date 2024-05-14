@@ -1,3 +1,5 @@
+"""Operator/task definitions and registry."""
+
 from abc import ABC, abstractmethod
 from functools import partial
 from torch.nn import functional as F

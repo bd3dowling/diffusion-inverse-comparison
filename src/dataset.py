@@ -1,5 +1,8 @@
+"""Dataset definitions and registry."""
+
 from glob import glob
 from PIL import Image
+from enum import StrEnum
 from typing import Callable, Optional
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
@@ -8,7 +11,11 @@ from torchvision.datasets import VisionDataset
 __DATASET__ = {}
 
 
-def register_dataset(name: str):
+class Dataset(StrEnum):
+    FFHQ = "ffhq"
+
+
+def register_dataset(name: Dataset):
     def wrapper(cls):
         if __DATASET__.get(name, None):
             raise NameError(f"Name {name} is already registered!")
@@ -18,7 +25,7 @@ def register_dataset(name: str):
     return wrapper
 
 
-def get_dataset(name: str, root: str, **kwargs):
+def get_dataset(name: Dataset, root: str, **kwargs):
     if __DATASET__.get(name, None) is None:
         raise NameError(f"Dataset {name} is not defined.")
     return __DATASET__[name](root=root, **kwargs)
@@ -31,7 +38,7 @@ def get_dataloader(dataset: VisionDataset, batch_size: int, num_workers: int, tr
     return dataloader
 
 
-@register_dataset(name="ffhq")
+@register_dataset(name=Dataset.FFHQ)
 class FFHQDataset(VisionDataset):
     def __init__(self, root: str, transforms: Optional[Callable] = None):
         super().__init__(root, transforms)
