@@ -6,7 +6,10 @@ import torch
 from tqdm.auto import tqdm
 from strenum import StrEnum
 
-from diffusion_inverse_comparison.posterior_mean_variance import get_mean_processor, get_var_processor
+from diffusion_inverse_comparison.posterior_mean_variance import (
+    get_mean_processor,
+    get_var_processor,
+)
 from diffusion_inverse_comparison.utils.array import extract_and_expand
 
 
