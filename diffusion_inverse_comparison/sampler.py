@@ -6,8 +6,8 @@ import torch
 from tqdm.auto import tqdm
 from enum import StrEnum
 
-from src.posterior_mean_variance import get_mean_processor, get_var_processor
-from src.utils.array import extract_and_expand
+from diffusion_inverse_comparison.posterior_mean_variance import get_mean_processor, get_var_processor
+from diffusion_inverse_comparison.utils.array import extract_and_expand
 
 
 __SAMPLER__ = {}

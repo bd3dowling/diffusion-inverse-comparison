@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 
-from src.utils.image import dynamic_thresholding
-from src.utils.array import extract_and_expand
+from diffusion_inverse_comparison.utils.image import dynamic_thresholding
+from diffusion_inverse_comparison.utils.array import extract_and_expand
 
 
 ########################
