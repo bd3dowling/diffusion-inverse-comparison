@@ -21,16 +21,25 @@ class SourceOption(StrEnum):
 class DashboardConfig(BaseModel):
     dashboard_title: str
     task_caption: str
+    task_help: str
     sampler_caption: str
+    sampler_help: str
     conditioning_method_caption: str
+    conditioning_method_help: str
     source_caption: str
     ts_respacing_caption: str
+    ts_respacing_help: str
     run_label: str
+    run_help: str
     stop_label: str
+    stop_help: str
     img_upload_prompt: str
     ref_col_header: str
+    ref_col_help: str
     input_col_header: str
+    input_col_help: str
     output_col_header: str
+    output_col_help: str
     progress_caption: str
     ts_respacing_vals: list[PositiveInt]
     task_label_map: dict[Operator, str]

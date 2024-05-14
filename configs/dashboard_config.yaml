@@ -1,17 +1,36 @@
 dashboard_title: Diffusion Models for Inverse Problem Solving
 
 task_caption: "Task:"
+task_help: Inverse task to solve
+
 sampler_caption: "Sampler:"
+sampler_help: Sampler to use for backwards process
+
 conditioning_method_caption: "Condition method:"
+conditioning_method_help: Method with which to apply conditioning to sampler
+
 source_caption: "Test image(s) source:"
-ts_respacing_caption: "Timespace respacing:"
+
+ts_respacing_caption: "Timestep respacing:"
+ts_respacing_help: Respace timesteps for faster, approximated sampling with DDIM
 
 run_label: Run
+run_help: Run the sampler
+
 stop_label: Stop
+stop_help: Stop the sampler
+
 img_upload_prompt: "Upload an image:"
+
 ref_col_header: Reference
+ref_col_help: Reference FFHQ sample
+
 input_col_header: Input
+input_col_help: Transformed image for example usage as input
+
 output_col_header: Output
+output_col_help: Sampling result from diffusion model with conditioning applied
+
 progress_caption: Denoising...
 
 ts_respacing_vals:

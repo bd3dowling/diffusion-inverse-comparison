@@ -25,6 +25,7 @@ present, the following capabilities are supported by the dashboard:
 - Conditioning method selection; currently only supports:
     - Unconditional sampling
     - [Diffusion Posterior Sampling](https://arxiv.org/abs/2209.14687)
+- Timestep respacing (when DDIM selected).
 
 Originally, custom uploaded images were supported but this feature was removed since for it to be
 sensible several other customisation options need to be added first. As such, three sample images

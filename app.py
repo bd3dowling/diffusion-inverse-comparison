@@ -47,6 +47,7 @@ col_task, col_sampler, col_cond = st.columns(3)
 with col_task:
     task_name = st.radio(
         label=dashboard_config.task_caption,
+        help=dashboard_config.task_help,
         options=dashboard_config.task_label_map.keys(),
         format_func=lambda key: dashboard_config.task_label_map[key],
         on_change=stop_callback,
@@ -56,6 +57,7 @@ with col_task:
 with col_sampler:
     sampler_name = st.radio(
         label=dashboard_config.sampler_caption,
+        help=dashboard_config.sampler_help,
         options=dashboard_config.sampler_label_map.keys(),
         format_func=lambda key: dashboard_config.sampler_label_map[key],
         on_change=stop_callback,
@@ -65,6 +67,7 @@ with col_sampler:
 with col_cond:
     conditioning_method_name = st.radio(
         label=dashboard_config.conditioning_method_caption,
+        help=dashboard_config.conditioning_method_help,
         options=dashboard_config.conditioning_method_label_map.keys(),
         format_func=lambda key: dashboard_config.conditioning_method_label_map[key],
         on_change=stop_callback,
@@ -74,6 +77,7 @@ with col_cond:
 if sampler_name == Sampler.DDIM:
     timestep_respacing = st.select_slider(
         label=dashboard_config.ts_respacing_caption,
+        help=dashboard_config.ts_respacing_help,
         options=dashboard_config.ts_respacing_vals,
         value=dashboard_config.ts_respacing_vals[-1],
         on_change=stop_callback,
@@ -84,11 +88,16 @@ else:
 # Run and stop buttons
 if not st.session_state["running"]:
     st.button(
-        dashboard_config.run_label, type="primary", use_container_width=True, on_click=run_callback
+        label=dashboard_config.run_label,
+        help=dashboard_config.run_help,
+        type="primary",
+        use_container_width=True,
+        on_click=run_callback,
     )
 else:
     st.button(
-        dashboard_config.stop_label,
+        label=dashboard_config.stop_label,
+        help=dashboard_config.stop_help,
         type="secondary",
         use_container_width=True,
         on_click=stop_callback,
@@ -117,11 +126,20 @@ else:
     # If ffhq source, use three columns for reference, input (transformed) and ouput.
     col_ref, col_in, col_out = st.columns(3)
     with col_ref:
-        st.header(dashboard_config.ref_col_header)
+        st.header(
+            body=dashboard_config.ref_col_header,
+            help=dashboard_config.ref_col_help,
+        )
     with col_in:
-        st.header(dashboard_config.input_col_header)
+        st.header(
+            body=dashboard_config.input_col_header,
+            help=dashboard_config.input_col_help,
+        )
     with col_out:
-        st.header(dashboard_config.output_col_header)
+        st.header(
+            body=dashboard_config.output_col_header,
+            help=dashboard_config.output_col_help,
+        )
     uploaded_img_buffer = None
 
 # Load image(s) either from upload or dataset samples (and transform in such case).
