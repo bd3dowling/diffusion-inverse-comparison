@@ -1,6 +1,6 @@
 conditioning:
   method: ps
-  params:
+  params: {}
 
 measurement:
   operator:

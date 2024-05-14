@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from functools import partial
 from torch.nn import functional as F
 from torchvision import torch
-from enum import StrEnum
+from strenum import StrEnum
 
 from external.resizer import Resizer
 from diffusion_inverse_comparison.utils.image import Blurkernel

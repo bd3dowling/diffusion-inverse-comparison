@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import torch
-from enum import StrEnum
+from strenum import StrEnum
 
 __CONDITIONING_METHOD__ = {}
 

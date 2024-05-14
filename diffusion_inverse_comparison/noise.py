@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from torchvision import torch
-from enum import StrEnum
+from strenum import StrEnum
 import numpy as np
 
 

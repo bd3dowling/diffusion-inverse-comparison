@@ -2,7 +2,7 @@
 
 from glob import glob
 from PIL import Image
-from enum import StrEnum
+from strenum import StrEnum
 from typing import Callable, Optional
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
