@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import functools
 
-from src.utils.neural_network import (
+from diffusion_inverse_comparison.utils.neural_network import (
     checkpoint,
     conv_nd,
     linear,

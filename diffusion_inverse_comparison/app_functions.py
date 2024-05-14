@@ -15,19 +15,19 @@ from streamlit.delta_generator import DeltaGenerator
 import configs
 from configs import task_configs
 from data import samples
-from src.config_models import SourceOption
-from src.conditioning_methods import (
+from diffusion_inverse_comparison.config_models import SourceOption
+from diffusion_inverse_comparison.conditioning_methods import (
     ConditioningMethod,
     ConditioningMethod_,
     get_conditioning_method,
 )
-from src.dataset import Dataset, get_dataloader, get_dataset
-from src.noise import get_noise
-from src.operator import Operator, get_operator
-from src.sampler import Sampler, GaussianDiffusion, create_sampler
-from src.unet import UNetModel, create_model
-from src.utils.image import clear_color, mask_generator
-from src.utils.logger import get_logger
+from diffusion_inverse_comparison.dataset import Dataset, get_dataloader, get_dataset
+from diffusion_inverse_comparison.noise import get_noise
+from diffusion_inverse_comparison.operator import Operator, get_operator
+from diffusion_inverse_comparison.sampler import Sampler, GaussianDiffusion, create_sampler
+from diffusion_inverse_comparison.unet import UNetModel, create_model
+from diffusion_inverse_comparison.utils.image import clear_color, mask_generator
+from diffusion_inverse_comparison.utils.logger import get_logger
 
 logger = get_logger()
 

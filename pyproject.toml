@@ -1,10 +1,9 @@
 [tool.poetry]
 name = "diffusion-inverse-comparison"
 version = "0.1.0"
-description = ""
+description = "Dashboard for comparing diffusion models for inverse problem solving."
 authors = ["Ben Dowling <ben.dowling@icloud.com>"]
 readme = "README.md"
-package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -35,4 +34,4 @@ line-length = 100
 exclude = ["external"]
 
 [tool.ruff.lint.per-file-ignores]
-"src/utils/image.py" = ["E741"]
+"diffusion_inverse_comparison/utils/image.py" = ["E741"]

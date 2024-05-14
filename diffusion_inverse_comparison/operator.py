@@ -7,7 +7,7 @@ from torchvision import torch
 from enum import StrEnum
 
 from external.resizer import Resizer
-from src.utils.image import Blurkernel
+from diffusion_inverse_comparison.utils.image import Blurkernel
 
 from external.motionblur import Kernel
 

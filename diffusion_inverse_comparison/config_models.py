@@ -5,9 +5,9 @@ import configs
 from typing import Any
 from importlib.resources import files
 from pydantic import BaseModel, PositiveInt
-from src.operator import Operator
-from src.sampler import Sampler
-from src.conditioning_methods import ConditioningMethod
+from diffusion_inverse_comparison.operator import Operator
+from diffusion_inverse_comparison.sampler import Sampler
+from diffusion_inverse_comparison.conditioning_methods import ConditioningMethod
 
 
 class SourceOption(StrEnum):

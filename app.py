@@ -2,10 +2,10 @@
 
 import streamlit as st
 
-from src.config_models import DashboardConfig, SourceOption
-from src.sampler import Sampler
-from src.utils.image import clear_color
-from src.app_functions import load, run
+from diffusion_inverse_comparison.config_models import DashboardConfig, SourceOption
+from diffusion_inverse_comparison.sampler import Sampler
+from diffusion_inverse_comparison.utils.image import clear_color
+from diffusion_inverse_comparison.app_functions import load, run
 
 
 # Initialize state variable for tracking run
