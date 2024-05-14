@@ -1,25 +1,25 @@
 """PyTorch model code."""
 
-from abc import abstractmethod
-
+import functools
 import math
+from abc import abstractmethod
+from importlib.resources import files
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import functools
 
+from data import models
 from diffusion_inverse_comparison.utils.neural_network import (
+    avg_pool_nd,
     checkpoint,
     conv_nd,
     linear,
-    avg_pool_nd,
-    zero_module,
     normalization,
     timestep_embedding,
+    zero_module,
 )
-
 
 NUM_CLASSES = 1000
 
@@ -84,10 +84,11 @@ def create_model(
         use_new_attention_order=use_new_attention_order,
     )
 
-    try:
-        model.load_state_dict(torch.load(model_path, map_location="cpu"))
-    except Exception as e:
-        print(f"Got exception: {e} / Randomly initialize")
+    model_checkpoint_path = files(models) / "ffhq_10m.pt"
+
+    with model_checkpoint_path.open() as f:
+        model.load_state_dict(torch.load(f, map_location="cpu"))
+
     return model
 
 
