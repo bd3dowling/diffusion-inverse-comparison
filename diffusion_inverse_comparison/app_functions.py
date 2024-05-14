@@ -251,9 +251,12 @@ def run(
         column as a side-effect.
 
     Args:
-        loaded (list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, Callable]]): _description_
-        col_out (DeltaGenerator): _description_
-        progress_caption (str): _description_
+        loaded (list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, Callable]]): List of samples
+            with each being a tuple comprising the original image (uploaded or from dataset), the
+            noised image (with transformations applied), the starting noise from which to begin the
+            backwards process, and the sampling function associated with the sample.
+        col_out (DeltaGenerator): The output streamlit column reference.
+        progress_caption (str): Caption for streamlit progress bar.
     """
     logger.info("Running...")
     for _, y_n, x_start, sample_fn in loaded:

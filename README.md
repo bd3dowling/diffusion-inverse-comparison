@@ -124,3 +124,4 @@ others. In roughly my order of priority, the following future work should be con
 - Assess swapping to Jax.
 - Assess Streamlit improvements (e.g. better caching, state management).
 - Assess proper deployment options/strategy (e.g. using AWS with permanent site).
+- Add more tests for other core modules, improving coverage.
