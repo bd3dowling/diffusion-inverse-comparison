@@ -96,6 +96,8 @@ _must_ have an NVidia GPU (with CUDA and PyTorch installed as required per your 
 then follow the following simple steps:
 
 - Use [`poetry`](https://python-poetry.org/docs/basic-usage/) to install the requisite dependencies.
+- From this [link](https://drive.google.com/drive/folders/1jElnRoFv7b31fG0v6pTSQkelbSX3xGZh?usp=sharing),
+  download the checkpoint `ffhq_10m.pt` to the `/data/models/` directory.
 - From project root, run `streamlit run app.py`.
 - Open link printed out in the console.
 
