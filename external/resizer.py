@@ -1,4 +1,4 @@
-"""https://github.com/assafshocher/resizer?tab=readme-ov-file"""
+"""https://github.com/assafshocher/resizer"""
 
 import numpy as np
 import torch
