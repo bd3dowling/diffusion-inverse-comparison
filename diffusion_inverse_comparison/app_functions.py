@@ -1,4 +1,4 @@
-"""Functions for the dashboard."""
+"""Functions related to the dashboard / task execution."""
 
 from functools import partial
 from importlib.resources import files
