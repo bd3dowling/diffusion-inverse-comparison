@@ -85,9 +85,7 @@ def create_model(
     )
 
     model_checkpoint_path = files(models) / "ffhq_10m.pt"
-
-    with model_checkpoint_path.open() as f:
-        model.load_state_dict(torch.load(f, map_location="cpu"))
+    model.load_state_dict(torch.load(model_checkpoint_path.open(mode="rb"), map_location="cpu"))
 
     return model
 
