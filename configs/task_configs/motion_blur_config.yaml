@@ -2,13 +2,11 @@ conditioning:
   method: ps
   params:
     scale: 0.3
-
 measurement:
   operator:
     name: motion_blur
     kernel_size: 61
     intensity: 0.5
-
-  noise: 
+  noise:
     name: gaussian
     sigma: 0.05

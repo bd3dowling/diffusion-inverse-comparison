@@ -1,0 +1,7 @@
+extends: default
+
+ignore: |
+  .venv/*
+
+rules:
+  document-start: disable
