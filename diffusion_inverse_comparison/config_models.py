@@ -1,13 +1,16 @@
-from enum import StrEnum
+"""Pydantic models for configs."""
+
+from importlib.resources import files
+from typing import Any
 
 import yaml
-import configs
-from typing import Any
-from importlib.resources import files
 from pydantic import BaseModel, PositiveInt
+from strenum import StrEnum
+
+import configs
+from diffusion_inverse_comparison.conditioning_methods import ConditioningMethod
 from diffusion_inverse_comparison.operator import Operator
 from diffusion_inverse_comparison.sampler import Sampler
-from diffusion_inverse_comparison.conditioning_methods import ConditioningMethod
 
 
 class SourceOption(StrEnum):
