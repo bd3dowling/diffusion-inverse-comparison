@@ -1,3 +1,5 @@
+"""Noise type definitions and registry."""
+
 from abc import ABC, abstractmethod
 from torchvision import torch
 from enum import StrEnum

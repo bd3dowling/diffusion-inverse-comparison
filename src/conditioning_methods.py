@@ -1,3 +1,5 @@
+"""Conditioning method definitions and registry."""
+
 from abc import ABC, abstractmethod
 import torch
 from enum import StrEnum
@@ -70,7 +72,7 @@ class Identity(ConditioningMethod_):
 @register_conditioning_method(name=ConditioningMethod.PROJECTION)
 class Projection(ConditioningMethod_):
     def conditioning(self, x_t, noisy_measurement, **kwargs):
-        x_t = self.project(data=x_t, noisy_measurement=noisy_measurement)
+        x_t = self.project(data=x_t, noisy_measurement=noisy_measurement, **kwargs)
         return x_t, torch.Tensor([0])
 
 

@@ -1,0 +1,35 @@
+dashboard_title: Diffusion Models for Inverse Problem Solving
+
+task_caption: "Task:"
+sampler_caption: "Sampler:"
+conditioning_method_caption: "Condition method:"
+source_caption: "Test image(s) source:"
+ts_respacing_caption: "Timespace respacing:"
+
+run_label: Run
+stop_label: Stop
+img_upload_prompt: "Upload an image:"
+ref_col_header: Reference
+input_col_header: Input
+output_col_header: Output
+progress_caption: Denoising...
+
+ts_respacing_vals:
+  - 100
+  - 250
+  - 500
+  - 1000
+task_label_map:
+  super_resolution: Super resolution
+  motion_blur: Motion deblur
+  inpainting: Inpainting
+  gaussian_blur: Gaussian deblur
+sampler_label_map:
+  ddpm: DDPM
+  ddim: DDIM
+conditioning_method_label_map:
+  ps: DPS
+  vanilla: No conditioning
+source_label_map:
+  ffhq: FFHQ samples
+  own: Own

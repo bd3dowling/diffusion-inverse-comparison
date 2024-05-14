@@ -1,4 +1,5 @@
-from enum import StrEnum
+"""Main dashboard code."""
+
 from functools import partial
 from importlib.resources import files
 from typing import Any
@@ -13,8 +14,9 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 import configs
 from configs import task_configs
 from data import samples
+from src.config_models import DashboardConfig, SourceOption
 from src.conditioning_methods import ConditioningMethod, get_conditioning_method
-from src.dataloader import get_dataloader, get_dataset
+from src.dataset import Dataset, get_dataloader, get_dataset
 from src.noise import get_noise
 from src.operator import Operator, get_operator
 from src.sampler import Sampler, create_sampler
@@ -23,47 +25,8 @@ from src.utils.image import clear_color, mask_generator
 from src.utils.logger import get_logger
 
 logger = get_logger()
+dashboard_config = DashboardConfig.load()
 
-
-class SourceOption(StrEnum):
-    FFHQ = "ffhq"
-    OWN = "own"
-
-
-DASHBOARD_TITLE = "Diffusion Models for Inverse Problem Solving"
-
-TASK_CAPTION = "Task:"
-SAMPLER_CAPTION = "Sampler:"
-CONDITIONING_METHOD_CAPTION = "Condition method:"
-SOURCE_CAPTION = "Test image(s) source:"
-
-TS_RESPACING_CAPTION = "Timespace respacing:"
-
-RUN_LABEL = "Run"
-STOP_LABEL = "Stop"
-IMG_UPLOAD_PROMPT = "Upload an image:"
-REF_COL_HEADER = "Reference"
-INPUT_COL_HEADER = "Input"
-OUTPUT_COL_HEADER = "Output"
-PROGRESS_CAPTION = "Denoising..."
-
-TS_RESPACING_VALS = (100, 250, 500, 1000)
-TASK_LABEL_MAP = {
-    Operator.SUPER_RESOLUTION: "Super resolution",
-    Operator.MOTION_BLUR: "Motion deblur",
-    Operator.INPAINTING: "Inpainting",
-    Operator.GAUSSIAN_BLUR: "Gaussian deblur",
-}
-SAMPLER_LABEL_MAP = {Sampler.DDPM: "DDPM", Sampler.DDIM: "DDIM"}
-CONDITIONING_METHOD_LABEL_MAP = {
-    ConditioningMethod.POSTERIOR_SAMPLING: "DPS",
-    ConditioningMethod.PROJECTION: "Projection",
-    ConditioningMethod.VANILLA: "No conditioning",
-}
-SOURCE_LABEL_MAP = {SourceOption.FFHQ: "FFHQ samples", SourceOption.OWN: "Own"}
-
-
-# State initialization
 if "running" not in st.session_state:
     st.session_state["running"] = False
 
@@ -76,7 +39,6 @@ def stop_callback():
     st.session_state["running"] = False
 
 
-@st.cache_resource
 def get_device():
     device_str = "cuda" if torch.cuda.is_available() else "cpu"
     return torch.device(device_str)
@@ -132,23 +94,42 @@ def load(
     if source is None:
         raise ValueError("Bad source")
 
+    logger.info(f"Loading task: {task_name}")
+    logger.info(f"Using sampler: {sampler_name}")
+    logger.info(f"Using conditioning method: {conditioning_method_name}")
+    logger.info(f"Using source: {source}")
+    logger.info(f"Using timestep respacing: {timestep_respacing}")
+
     device = get_device()
+    logger.info(f"Using device: {device}")
+
     model = load_model(device)
+    logger.info("Loaded model...")
+
     sampler = load_sampler(sampler=sampler_name, timestep_respacing=timestep_respacing)
+    logger.info("Loaded sampler...")
+
     task_config = load_task_config(task_name)
     cond_config = task_config["conditioning"]
     measure_config = task_config["measurement"]
     operator_config = measure_config["operator"]
+    logger.info("Loaded task config...")
 
     operator = get_operator(device=device, **operator_config)
+    logger.info("Loaded operator...")
+
     noiser = get_noise(**measure_config["noise"])
+    logger.info("Loaded noiser...")
+
     cond_method = get_conditioning_method(
         conditioning_method_name, operator, noiser, **cond_config["params"]
     )
     base_sample_fn = get_sample_fn(cond_method, sampler, model)
+
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
     )
+
     out: list[tuple[Any, ...]] = []
     if source == SourceOption.OWN:
         if uploaded_img_buffer is None:
@@ -168,7 +149,7 @@ def load(
 
         out.append((ref_img.clone(), y_n.clone(), x_start, base_sample_fn))
     else:
-        dataset = get_dataset(name="ffhq", root=str(files(samples)), transforms=transform)
+        dataset = get_dataset(name=Dataset.FFHQ, root=str(files(samples)), transforms=transform)
         loader = get_dataloader(dataset, batch_size=1, num_workers=0, train=False)
 
         if task_name == Operator.INPAINTING:
@@ -196,95 +177,108 @@ def load(
 
             out.append((ref_img.clone(), y_n.clone(), x_start, sample_fn))
 
+    logger.info("Finished loading!")
     return out
 
 
 def run(loaded, col_out):
+    logger.info("Running...")
     for _, y_n, x_start, sample_fn in loaded:
         with col_out:
             placeholder = st.empty()
-            prog_bar = st.progress(0, text=PROGRESS_CAPTION)
+            prog_bar = st.progress(0, text=dashboard_config.progress_caption)
 
             for sample, _, percent_complete in sample_fn(x_start=x_start, measurement=y_n):
                 with placeholder.container():
                     st.image(clear_color(sample.clone()), use_column_width=True)
-                prog_bar.progress(percent_complete, text=PROGRESS_CAPTION)
+                prog_bar.progress(percent_complete, text=dashboard_config.progress_caption)
 
             prog_bar.empty()
-
+    logger.info("Run finished!")
     st.session_state["running"] = False
 
 
-# Dashboard
+#############
+# DASHBOARD #
+#############
 
-st.title(DASHBOARD_TITLE)
+st.title(dashboard_config.dashboard_title)
 
 # - Controls
 col_task, col_sampler, col_cond, col_src = st.columns(4)
 
 with col_task:
     task_name = st.radio(
-        label=TASK_CAPTION,
-        options=TASK_LABEL_MAP.keys(),
-        format_func=lambda key: TASK_LABEL_MAP[key],
+        label=dashboard_config.task_caption,
+        options=dashboard_config.task_label_map.keys(),
+        format_func=lambda key: dashboard_config.task_label_map[key],
         on_change=stop_callback,
     )
 
 with col_sampler:
     sampler_name = st.radio(
-        label=SAMPLER_CAPTION,
-        options=SAMPLER_LABEL_MAP.keys(),
-        format_func=lambda key: SAMPLER_LABEL_MAP[key],
+        label=dashboard_config.sampler_caption,
+        options=dashboard_config.sampler_label_map.keys(),
+        format_func=lambda key: dashboard_config.sampler_label_map[key],
         on_change=stop_callback,
     )
 
 with col_cond:
     conditioning_method_name = st.radio(
-        label=CONDITIONING_METHOD_CAPTION,
-        options=CONDITIONING_METHOD_LABEL_MAP.keys(),
-        format_func=lambda key: CONDITIONING_METHOD_LABEL_MAP[key],
+        label=dashboard_config.conditioning_method_caption,
+        options=dashboard_config.conditioning_method_label_map.keys(),
+        format_func=lambda key: dashboard_config.conditioning_method_label_map[key],
         on_change=stop_callback,
     )
 
 with col_src:
     source = st.radio(
-        label=SOURCE_CAPTION,
-        options=SOURCE_LABEL_MAP.keys(),
-        format_func=lambda key: SOURCE_LABEL_MAP[key],
+        label=dashboard_config.source_caption,
+        options=dashboard_config.source_label_map.keys(),
+        format_func=lambda key: dashboard_config.source_label_map[key],
         on_change=stop_callback,
     )
 
 if sampler_name == Sampler.DDIM:
     timestep_respacing = st.select_slider(
-        label=TS_RESPACING_CAPTION,
-        options=TS_RESPACING_VALS,
-        value=TS_RESPACING_VALS[-1],
+        label=dashboard_config.ts_respacing_caption,
+        options=dashboard_config.ts_respacing_vals,
+        value=dashboard_config.ts_respacing_vals[-1],
         on_change=stop_callback,
     )
 else:
-    timestep_respacing = TS_RESPACING_VALS[-1]
+    timestep_respacing = dashboard_config.ts_respacing_vals[-1]
 
 if not st.session_state["running"]:
-    st.button(RUN_LABEL, type="primary", use_container_width=True, on_click=run_callback)
+    st.button(
+        dashboard_config.run_label, type="primary", use_container_width=True, on_click=run_callback
+    )
 else:
-    st.button(STOP_LABEL, type="secondary", use_container_width=True, on_click=stop_callback)
+    st.button(
+        dashboard_config.stop_label,
+        type="secondary",
+        use_container_width=True,
+        on_click=stop_callback,
+    )
 
 if source == SourceOption.OWN:
     col_in, col_out = st.columns(2)
     with col_in:
-        st.header(INPUT_COL_HEADER)
+        st.header(dashboard_config.input_col_header)
         img_placeholder = st.empty()
-        uploaded_img_buffer = st.file_uploader(IMG_UPLOAD_PROMPT, type=["png", "jpg"])
+        uploaded_img_buffer = st.file_uploader(
+            dashboard_config.img_upload_prompt, type=["png", "jpg"]
+        )
     with col_out:
-        st.header(OUTPUT_COL_HEADER)
+        st.header(dashboard_config.output_col_header)
 else:
     col_ref, col_in, col_out = st.columns(3)
     with col_ref:
-        st.header(REF_COL_HEADER)
+        st.header(dashboard_config.ref_col_header)
     with col_in:
-        st.header(INPUT_COL_HEADER)
+        st.header(dashboard_config.input_col_header)
     with col_out:
-        st.header(OUTPUT_COL_HEADER)
+        st.header(dashboard_config.output_col_header)
     uploaded_img_buffer = None
 
 # - Data grid

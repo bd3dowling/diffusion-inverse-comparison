@@ -1,8 +1,11 @@
+"""Functions related to logging."""
+
 import logging
+from logging import Logger
 
 
-def get_logger():
-    logger = logging.getLogger(name="DPS")
+def get_logger() -> Logger:
+    logger = logging.getLogger(name="DIPS")
     logger.setLevel(logging.INFO)
 
     formatter = logging.Formatter("%(asctime)s [%(name)s] >> %(message)s")

@@ -1,4 +1,4 @@
-"""Helper functions for new types of inverse problems."""
+"""Utility functions for working with images."""
 
 from PIL import Image
 
