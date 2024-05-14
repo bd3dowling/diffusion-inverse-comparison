@@ -41,7 +41,7 @@ dashboard_config = DashboardConfig.load()
 st.title(dashboard_config.dashboard_title)
 
 # - Controls
-col_task, col_sampler, col_cond, col_src = st.columns(4)
+col_task, col_sampler, col_cond = st.columns(3)
 
 # Task selector
 with col_task:
@@ -70,15 +70,6 @@ with col_cond:
         on_change=stop_callback,
     )
 
-# Source type selector
-with col_src:
-    source = st.radio(
-        label=dashboard_config.source_caption,
-        options=dashboard_config.source_label_map.keys(),
-        format_func=lambda key: dashboard_config.source_label_map[key],
-        on_change=stop_callback,
-    )
-
 # Show timestep respacing slider if using DDIM sampler
 if sampler_name == Sampler.DDIM:
     timestep_respacing = st.select_slider(
@@ -104,6 +95,9 @@ else:
     )
 
 # - Data grid
+
+# NOTE: Placeholder until adequately fix/test custom uploads...
+source = SourceOption.FFHQ
 
 # Set data grid columns and their headers.
 if source == SourceOption.OWN:
