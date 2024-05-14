@@ -288,7 +288,14 @@ else:
     uploaded_img_buffer = None
 
 # - Data grid
-loaded = load(task_name, sampler_name, conditioning_method_name, source, timestep_respacing, uploaded_img_buffer)
+loaded = load(
+    task_name,
+    sampler_name,
+    conditioning_method_name,
+    source,
+    timestep_respacing,
+    uploaded_img_buffer,
+)
 
 if source == SourceOption.OWN:
     if uploaded_img_buffer:

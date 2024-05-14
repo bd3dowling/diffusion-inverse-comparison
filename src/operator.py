@@ -12,13 +12,13 @@ from external.motionblur import Kernel
 
 __OPERATOR__ = {}
 
+
 class Operator(StrEnum):
     NOISE = "noise"
     SUPER_RESOLUTION = "super_resolution"
     MOTION_BLUR = "motion_blur"
     GAUSSIAN_BLUR = "gaussian_blur"
     INPAINTING = "inpainting"
-
 
 
 def register_operator(name: Operator):

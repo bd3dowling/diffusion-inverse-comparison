@@ -9,6 +9,7 @@ from src.posterior_mean_variance import get_mean_processor, get_var_processor
 
 __SAMPLER__ = {}
 
+
 class Sampler(StrEnum):
     DDPM = "ddpm"
     DDIM = "ddim"

@@ -12,6 +12,7 @@ class Noise(StrEnum):
     GAUSSIAN = "gaussian"
     POISSON = "poisson"
 
+
 def register_noise(name: Noise):
     def wrapper(cls):
         if __NOISE__.get(name, None):
