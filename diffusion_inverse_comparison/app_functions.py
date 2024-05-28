@@ -203,7 +203,7 @@ def load(
             if task_name != Operator.SUPER_RESOLUTION
             else measure_config["operator"]["in_shape"]
         )
-        x_start = torch.randn(out_shape, device=device).requires_grad_()
+        x_start = torch.randn(out_shape, device=device, requires_grad=True)
 
         out.append((ref_img.clone(), y_n.clone(), x_start, base_sample_fn))
     else:
@@ -231,7 +231,7 @@ def load(
                 if task_name != Operator.SUPER_RESOLUTION
                 else measure_config["operator"]["in_shape"]
             )
-            x_start = torch.randn(out_shape, device=device).requires_grad_()
+            x_start = torch.randn(out_shape, device=device, requires_grad=True)
 
             out.append((ref_img.clone(), y_n.clone(), x_start, sample_fn))
 
