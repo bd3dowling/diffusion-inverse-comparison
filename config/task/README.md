@@ -1,4 +1,4 @@
-# task
+# config.task
 
 This is where all task configuration YAMLs live. For now, these are the only way of editing the task
 definitions. In future, these should be treated as base configurations which can be overriden by

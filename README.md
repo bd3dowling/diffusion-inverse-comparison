@@ -41,7 +41,7 @@ The structure and naming of top level modules follows the suggestion of
 [poetry](https://python-poetry.org/docs/basic-usage/) (which we use for dependency management).
 Each of the below directories has their own `README`, but roughly their contents are as follows:
 
-- [`configs`](/configs/): Where all configuration YAMLs live.
+- [`config`](/config/): Where all configuration YAMLs live.
 - [`data`](/data/): Where all resources, such as model checkpoints and image samples, live.
 - [`diffusion_inverse_comparison`](/diffusion_inverse_comparison): Where main application code lives.
 - [`external`](/external/): Where external, non-packaged dependencies live.
