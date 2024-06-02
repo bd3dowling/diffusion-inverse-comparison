@@ -2,14 +2,13 @@
 
 import math
 from abc import abstractmethod
-from importlib.resources import files
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from data import models
+from diffusion_inverse_comparison.config_models import ModelConfig
 from diffusion_inverse_comparison.utils.neural_network import (
     avg_pool_nd,
     checkpoint,
@@ -23,68 +22,52 @@ from diffusion_inverse_comparison.utils.neural_network import (
 NUM_CLASSES = 1000
 
 
-def create_model(
-    image_size,
-    num_channels,
-    num_res_blocks,
-    channel_mult="",
-    learn_sigma=False,
-    class_cond=False,
-    use_checkpoint=False,
-    attention_resolutions="16",
-    num_heads=1,
-    num_head_channels=-1,
-    num_heads_upsample=-1,
-    use_scale_shift_norm=False,
-    dropout=0,
-    resblock_updown=False,
-    use_new_attention_order=False,
-    model_path="",
-):
-    if channel_mult == "":
-        if image_size == 512:
+def create_model(config: ModelConfig):
+    if config.channel_mult == "":
+        if config.image_size == 512:
             channel_mult = (0.5, 1, 1, 2, 2, 4, 4)
-        elif image_size == 256:
+        elif config.image_size == 256:
             channel_mult = (1, 1, 2, 2, 4, 4)
-        elif image_size == 128:
+        elif config.image_size == 128:
             channel_mult = (1, 1, 2, 3, 4)
-        elif image_size == 64:
+        elif config.image_size == 64:
             channel_mult = (1, 2, 3, 4)
         else:
-            raise ValueError(f"unsupported image size: {image_size}")
+            raise ValueError(f"unsupported image size: {config.image_size}")
     else:
         channel_mult = tuple(int(ch_mult) for ch_mult in channel_mult.split(","))
 
     attention_ds = []
-    if isinstance(attention_resolutions, int):
-        attention_ds.append(image_size // attention_resolutions)
-    elif isinstance(attention_resolutions, str):
-        for res in attention_resolutions.split(","):
-            attention_ds.append(image_size // int(res))
+    if isinstance(config.attention_resolutions, int):
+        attention_ds.append(config.image_size // config.attention_resolutions)
+    elif isinstance(config.attention_resolutions, str):
+        for res in config.attention_resolutions.split(","):
+            attention_ds.append(config.image_size // int(res))
     else:
         raise NotImplementedError
 
     model = UNetModel(
-        image_size=image_size,
+        image_size=config.image_size,
         in_channels=3,
-        model_channels=num_channels,
-        out_channels=(3 if not learn_sigma else 6),
-        num_res_blocks=num_res_blocks,
+        model_channels=config.num_channels,
+        out_channels=(3 if not config.learn_sigma else 6),
+        num_res_blocks=config.num_res_blocks,
         attention_resolutions=tuple(attention_ds),
-        dropout=dropout,
+        dropout=config.dropout,
         channel_mult=channel_mult,
-        num_classes=(NUM_CLASSES if class_cond else None),
-        use_checkpoint=use_checkpoint,
-        num_heads=num_heads,
-        num_head_channels=num_head_channels,
-        num_heads_upsample=num_heads_upsample,
-        use_scale_shift_norm=use_scale_shift_norm,
-        resblock_updown=resblock_updown,
-        use_new_attention_order=use_new_attention_order,
+        num_classes=(NUM_CLASSES if config.class_cond else None),
+        use_checkpoint=config.use_checkpoint,
+        num_heads=config.num_heads,
+        num_head_channels=config.num_head_channels,
+        num_heads_upsample=config.num_heads_upsample,
+        use_scale_shift_norm=config.use_scale_shift_norm,
+        resblock_updown=config.resblock_updown,
+        use_new_attention_order=config.use_new_attention_order,
     )
 
-    model_checkpoint_path = files(models) / "ffhq_10m.pt"
-    model.load_state_dict(torch.load(model_checkpoint_path.open(mode="rb"), map_location="cpu"))
+    model.load_state_dict(
+        torch.load(config.model_checkpoint_path.open(mode="rb"), map_location="cpu")
+    )
 
     return model
 

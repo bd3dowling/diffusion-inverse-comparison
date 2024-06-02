@@ -12,16 +12,15 @@ from PIL import Image
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 from streamlit.delta_generator import DeltaGenerator
 
-import configs
-from configs import task_configs
-from data import samples
-from diffusion_inverse_comparison.config_models import SourceOption
+import config
+from config import task
+from diffusion_inverse_comparison.config_models import ModelName, ModelConfig
 from diffusion_inverse_comparison.conditioning_methods import (
     ConditioningMethod,
     ConditioningMethod_,
     get_conditioning_method,
 )
-from diffusion_inverse_comparison.dataset import Dataset, get_dataloader, get_dataset
+from diffusion_inverse_comparison.dataset import DatasetType, get_dataloader, get_dataset
 from diffusion_inverse_comparison.noise import get_noise
 from diffusion_inverse_comparison.operator import Operator, get_operator
 from diffusion_inverse_comparison.sampler import Sampler, GaussianDiffusion, create_sampler
@@ -42,22 +41,18 @@ def get_device() -> torch.device:
     return torch.device(device_str)
 
 
-@st.cache_resource
-def load_model(device: torch.device) -> UNetModel:
+@st.cache_resource(hash_funcs={ModelConfig: str})
+def load_model(model_config: ModelConfig, device: torch.device) -> UNetModel:
     """Load UNet backwards process model.
 
     Args:
+        model_config (ModelConfig): Config for the model.
         device (torch.device): Device on which to load model
 
     Returns:
         UNetModel: Loaded model.
     """
-    model_conf_path = files(configs) / "model_config.yaml"
-
-    with model_conf_path.open() as f:
-        model_config = yaml.load(f, Loader=yaml.FullLoader)
-
-    return create_model(**model_config).to(device).eval()
+    return create_model(model_config).to(device).eval()
 
 
 def load_sampler(**kwargs: Any) -> GaussianDiffusion:
@@ -66,7 +61,7 @@ def load_sampler(**kwargs: Any) -> GaussianDiffusion:
     Returns:
         GaussianDiffusion: Loaded sampler model.
     """
-    diffusion_conf_path = files(configs) / "diffusion_config.yaml"
+    diffusion_conf_path = files(config) / "diffusion.yaml"
 
     with diffusion_conf_path.open() as f:
         diffusion_config = yaml.load(f, Loader=yaml.FullLoader) | kwargs
@@ -83,7 +78,7 @@ def load_task_config(task_name: Operator) -> dict[str, Any]:
     Returns:
         dict[str, Any]: Task config dictionary.
     """
-    task_conf_path = files(task_configs) / f"{task_name}_config.yaml"
+    task_conf_path = files(task) / f"{task_name}.yaml"
 
     with task_conf_path.open() as f:
         return yaml.load(f, Loader=yaml.FullLoader)
@@ -113,20 +108,22 @@ def get_sample_fn(
 
 
 def load(
+    model_name: ModelName | None,
     task_name: Operator | None,
     sampler_name: Sampler | None,
     conditioning_method_name: ConditioningMethod | None,
-    source: SourceOption | None,
+    source_name: DatasetType | None,
     timestep_respacing: int,
     uploaded_img_buffer: UploadedFile | None,
 ) -> list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, Callable]]:
     """Load requisites for dasbhoard.
 
     Args:
+        model_name (ModelName | None): Model name.
         task_name (Operator | None): Task name.
         sampler_name (Sampler | None): Sampler name.
         conditioning_method_name (ConditioningMethod | None): Conditioning method name.
-        source (SourceOption | None): Source type.
+        source_name (DatasetType | None): Source name.
         timestep_respacing (int): Amount of timestep respacing (for DDIM).
         uploaded_img_buffer (UploadedFile | None): Buffer of uploaded image, if source is own.
 
@@ -143,25 +140,29 @@ def load(
             backwards process, and the sampling function associated with the sample.
     """
 
+    if model_name is None:
+        raise ValueError("Bad model name")
     if task_name is None:
         raise ValueError("Bad task")
     if sampler_name is None:
         raise ValueError("Bad sampler")
     if conditioning_method_name is None:
         raise ValueError("Bad conditioning method")
-    if source is None:
+    if source_name is None:
         raise ValueError("Bad source")
 
-    logger.info(f"Loading task: {task_name}")
+    logger.info(f"Using model: {model_name}")
+    logger.info(f"Using task: {task_name}")
     logger.info(f"Using sampler: {sampler_name}")
     logger.info(f"Using conditioning method: {conditioning_method_name}")
-    logger.info(f"Using source: {source}")
+    logger.info(f"Using source: {source_name}")
     logger.info(f"Using timestep respacing: {timestep_respacing}")
 
     device = get_device()
     logger.info(f"Using device: {device}")
 
-    model = load_model(device)
+    model_config = ModelConfig.load(model_name)
+    model = load_model(model_config, device)
     logger.info("Loaded model...")
 
     sampler = load_sampler(sampler=sampler_name, timestep_respacing=timestep_respacing)
@@ -189,12 +190,12 @@ def load(
     )
 
     out: list[tuple[Any, ...]] = []
-    if source == SourceOption.OWN:
+    if source_name == DatasetType.OWN:
         if uploaded_img_buffer is None:
             return out
 
         img = Image.open(uploaded_img_buffer).convert("RGB")
-        ref_img = transform(img).to(device)[None, ...]
+        ref_img = transform(img).to(device)[None, ...]  # add dummy batch dim
 
         y_n = noiser(ref_img)
 
@@ -207,7 +208,7 @@ def load(
 
         out.append((ref_img.clone(), y_n.clone(), x_start, base_sample_fn))
     else:
-        dataset = get_dataset(name=Dataset.FFHQ, root=str(files(samples)), transforms=transform)
+        dataset = get_dataset(name=source_name, transforms=transform)
         loader = get_dataloader(dataset, batch_size=1, num_workers=0, train=False)
 
         if task_name == Operator.INPAINTING:

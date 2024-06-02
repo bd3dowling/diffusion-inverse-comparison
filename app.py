@@ -2,10 +2,11 @@
 
 import streamlit as st
 
-from diffusion_inverse_comparison.config_models import DashboardConfig, SourceOption
+from diffusion_inverse_comparison.config_models import DashboardConfig
 from diffusion_inverse_comparison.sampler import Sampler
 from diffusion_inverse_comparison.utils.image import clear_color
 from diffusion_inverse_comparison.app_functions import load, run
+from diffusion_inverse_comparison.dataset import DatasetType
 
 
 # Initialize state variable for tracking run
@@ -85,6 +86,29 @@ if sampler_name == Sampler.DDIM:
 else:
     timestep_respacing = dashboard_config.ts_respacing_vals[-1]
 
+
+col_model, col_source = st.columns(2)
+
+# Model selector
+with col_model:
+    model_name = st.radio(
+        label=dashboard_config.model_caption,
+        help=dashboard_config.model_help,
+        options=dashboard_config.model_label_map.keys(),
+        format_func=lambda key: dashboard_config.model_label_map[key],
+        on_change=stop_callback,
+    )
+
+# Dataset selector
+with col_source:
+    source_name = st.radio(
+        label=dashboard_config.source_caption,
+        help=dashboard_config.source_help,
+        options=dashboard_config.source_label_map.keys(),
+        format_func=lambda key: dashboard_config.source_label_map[key],
+        on_change=stop_callback,
+    )
+
 # Run and stop buttons
 if not st.session_state["running"]:
     st.button(
@@ -105,11 +129,8 @@ else:
 
 # - Data grid
 
-# NOTE: Placeholder until adequately fix/test custom uploads...
-source = SourceOption.FFHQ
-
 # Set data grid columns and their headers.
-if source == SourceOption.OWN:
+if source_name == DatasetType.OWN:
     # If own source, use two columns for input and output.
     col_in, col_out = st.columns(2)
     with col_in:
@@ -144,16 +165,17 @@ else:
 
 # Load image(s) either from upload or dataset samples (and transform in such case).
 loaded = load(
+    model_name,
     task_name,
     sampler_name,
     conditioning_method_name,
-    source,
+    source_name,
     timestep_respacing,
     uploaded_img_buffer,
 )
 
 # Render loaded image(s) into the data grid.
-if source == SourceOption.OWN:
+if source_name == DatasetType.OWN:
     if uploaded_img_buffer:
         ref_img = loaded[0][0]
         with img_placeholder.container():

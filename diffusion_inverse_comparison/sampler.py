@@ -198,7 +198,6 @@ class GaussianDiffusion:
             # Give condition.
             noisy_measurement = self.q_sample(measurement, t=time)
 
-            # TODO: how can we handle argument for different condition method?
             img, distance = measurement_cond_fn(
                 x_t=out["sample"],
                 measurement=measurement,

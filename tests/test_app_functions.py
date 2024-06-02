@@ -38,11 +38,14 @@ def test_load_task_config():
 
 
 def test_load():
-    assert load(
-        Operator.SUPER_RESOLUTION,
-        Sampler.DDPM,
-        ConditioningMethod.POSTERIOR_SAMPLING,
-        SourceOption.FFHQ,
-        1000,
-        None,
-    ) is not None
+    assert (
+        load(
+            Operator.SUPER_RESOLUTION,
+            Sampler.DDPM,
+            ConditioningMethod.POSTERIOR_SAMPLING,
+            SourceOption.FFHQ,
+            1000,
+            None,
+        )
+        is not None
+    )

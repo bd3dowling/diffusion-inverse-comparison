@@ -9,7 +9,11 @@ sampler_help: Sampler to use for backwards process
 conditioning_method_caption: "Condition method:"
 conditioning_method_help: Method with which to apply conditioning to sampler
 
+model_caption: "Model:"
+model_help: Model to use for estimating score
+
 source_caption: "Test image(s) source:"
+source_help: Source of test images
 
 ts_respacing_caption: "Timestep respacing:"
 ts_respacing_help: Respace timesteps for faster, approximated sampling with DDIM
@@ -51,4 +55,7 @@ conditioning_method_label_map:
   vanilla: No conditioning
 source_label_map:
   ffhq: FFHQ samples
-  own: Own
+  imagenet: ImageNet samples
+model_label_map:
+  ffhq: FFHQ 10M model
+  imagenet: Imagenet256 model
