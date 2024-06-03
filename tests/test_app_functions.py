@@ -8,8 +8,8 @@ from diffusion_inverse_comparison.app_functions import (
 )
 from diffusion_inverse_comparison.operator import Operator
 from diffusion_inverse_comparison.sampler import Sampler
-from diffusion_inverse_comparison.conditioning_methods import ConditioningMethod
-from diffusion_inverse_comparison.config_models import SourceOption
+from diffusion_inverse_comparison.conditioning_methods import ConditioningMethodName
+from diffusion_inverse_comparison.dataset import DatasetType
 
 
 def test_load_model():
@@ -42,8 +42,8 @@ def test_load():
         load(
             Operator.SUPER_RESOLUTION,
             Sampler.DDPM,
-            ConditioningMethod.POSTERIOR_SAMPLING,
-            SourceOption.FFHQ,
+            ConditioningMethodName.POSTERIOR_SAMPLING,
+            DatasetType.FFHQ,
             1000,
             None,
         )

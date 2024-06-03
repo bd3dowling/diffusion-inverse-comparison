@@ -52,6 +52,7 @@ sampler_label_map:
   ddim: DDIM
 conditioning_method_label_map:
   ps: DPS
+  tmp: TMPD
   vanilla: No conditioning
 source_label_map:
   ffhq: FFHQ samples

@@ -211,6 +211,52 @@ class GaussianDiffusion:
 
             yield img, distance.item(), percent_complete
 
+    def tmpd_sample_loop(self, model, x_start, measurement, measurement_cond_fn):
+        img = x_start
+        device = x_start.device
+
+        pbar = tqdm(list(range(self.num_timesteps))[::-1])
+        for idx in pbar:
+            percent_complete = (self.num_timesteps - idx) / self.num_timesteps
+            time = torch.tensor([idx] * img.shape[0], device=device)
+
+            t = self._scale_timesteps(time)
+            img = img.requires_grad_()
+    
+            # TODO: is time meant to be continuous time or a timestep check in each
+            # Need to define estimate_x_0 through the function
+            m = self.sqrt_alphas_cumprod[time]
+            v = self.sqrt_one_minus_alphas_cumprod[time] ** 2
+            ratio = v / m
+
+            def estimate_x_0(x_t):
+                model_output = model(x_t, self._scale_timesteps(time))
+                # In the case of "learned" variance, model will give twice channels.
+                if model_output.shape[1] == 2 * x_t.shape[1]:
+                    model_output, _ = torch.split(model_output, x_t.shape[1], dim=1)
+                # Need to extract correct eps
+                return self.mean_processor.predict_xstart(x_t, time, model_output)
+
+            x_0, distance = measurement_cond_fn(
+                img, measurement, estimate_x_0, ratio, v, 0.1
+            )
+
+            model_mean = self.mean_processor.q_posterior_mean(x_0, x_t=img, t=time)
+            _, model_log_variance = self.var_processor.get_variance(x_0, t=time)
+
+            sample = model_mean
+
+            noise = torch.randn_like(img)
+            if t != 0:  # no noise when t == 0
+                sample += torch.exp(0.5 * model_log_variance) * noise
+
+            img = sample
+            img = img.detach_()
+
+            pbar.set_postfix({"distance": distance.item()}, refresh=False)
+
+            yield img, distance.item(), percent_complete
+
     def p_sample(self, model, x, t):
         raise NotImplementedError
 

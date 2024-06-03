@@ -16,8 +16,8 @@ import config
 from config import task
 from diffusion_inverse_comparison.config_models import ModelName, ModelConfig
 from diffusion_inverse_comparison.conditioning_methods import (
+    ConditioningMethodName,
     ConditioningMethod,
-    ConditioningMethod_,
     get_conditioning_method,
 )
 from diffusion_inverse_comparison.dataset import DatasetType, get_dataloader, get_dataset
@@ -85,7 +85,7 @@ def load_task_config(task_name: Operator) -> dict[str, Any]:
 
 
 def get_sample_fn(
-    cond_method: ConditioningMethod_,
+    cond_method: ConditioningMethod,
     sampler: GaussianDiffusion,
     model: UNetModel,
     mask: torch.Tensor | None = None,
@@ -93,7 +93,7 @@ def get_sample_fn(
     """_summary_
 
     Args:
-        cond_method (ConditioningMethod_):
+        cond_method (ConditioningMethod):
         sampler (Sampler): Diffusion sampler.
         model (UNetModel): Backwards process model.
         mask (torch.Tensor | None, optional): Mask to apply to measurement. Defaults to None.
@@ -111,7 +111,7 @@ def load(
     model_name: ModelName | None,
     task_name: Operator | None,
     sampler_name: Sampler | None,
-    conditioning_method_name: ConditioningMethod | None,
+    conditioning_method_name: ConditioningMethodName | None,
     source_name: DatasetType | None,
     timestep_respacing: int,
     uploaded_img_buffer: UploadedFile | None,
@@ -122,7 +122,7 @@ def load(
         model_name (ModelName | None): Model name.
         task_name (Operator | None): Task name.
         sampler_name (Sampler | None): Sampler name.
-        conditioning_method_name (ConditioningMethod | None): Conditioning method name.
+        conditioning_method_name (ConditioningMethodName | None): Conditioning method name.
         source_name (DatasetType | None): Source name.
         timestep_respacing (int): Amount of timestep respacing (for DDIM).
         uploaded_img_buffer (UploadedFile | None): Buffer of uploaded image, if source is own.

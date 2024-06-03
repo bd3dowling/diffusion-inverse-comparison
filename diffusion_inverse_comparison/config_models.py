@@ -12,7 +12,7 @@ import config
 import config.model
 import data.model_checkpoint
 import data.samples
-from diffusion_inverse_comparison.conditioning_methods import ConditioningMethod
+from diffusion_inverse_comparison.conditioning_methods import ConditioningMethodName
 from diffusion_inverse_comparison.operator import Operator
 from diffusion_inverse_comparison.sampler import Sampler
 from diffusion_inverse_comparison.dataset import DatasetType
@@ -52,7 +52,7 @@ class DashboardConfig(BaseModel, protected_namespaces=()):
     ts_respacing_vals: list[PositiveInt]
     task_label_map: dict[Operator, str]
     sampler_label_map: dict[Sampler, str]
-    conditioning_method_label_map: dict[ConditioningMethod, str]
+    conditioning_method_label_map: dict[ConditioningMethodName, str]
     source_label_map: dict[DatasetType, str]
     model_label_map: dict[ModelName, str]
 
